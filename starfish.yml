@@ -1,10 +1,14 @@
 - hosts: starfish
   become: 'yes'
   vars:
-    current_mysql_root_password: ''
-    updated_mysql_root_password: "realStrongPassword"
+    #current_mysql_root_password: ''
+    #updated_mysql_root_password: "currentPassword"
+    #current_mysql_asterisk_password: ''
+    #updated_mysql_asterisk_password: "newpassword"
+    current_mysql_root_password: 'newpassword'
+    updated_mysql_root_password: "newpassword"
     current_mysql_asterisk_password: ''
-    updated_mysql_asterisk_password: "realStrongPassword"
+    updated_mysql_asterisk_password: "newpassword"
   tasks:
     - name: Install epel-release
       dnf:
@@ -17,10 +21,11 @@
           - wget
           - MySQL-python
         state: present
-    # - name: Install the MySQL repo.
-    #   dnf:
-    #     name: 'https://dev.mysql.com/get/mysql80-community-release-el7-5.noarch.rpm'
-    #     state: present
+    - name: Install the MySQL repo.
+      dnf:
+        name: 'https://dev.mysql.com/get/mysql80-community-release-el7-5.noarch.rpm'
+        state: present
+        disable_gpg_check: true 
     - name: Install mysql-server
       dnf:
         name: mysql-server
@@ -40,27 +45,27 @@
         name: mysqld
         state: started
         enabled: 'yes'
-    # - name: update mysql root pass for localhost root account from local servers
-      # mysql_user:
-      #   login_user: root
-      #   login_password: '{{ current_mysql_root_password }}'
-      #   name: root
-      #   host: '{{ item }}'
-      #   password: '{{ updated_mysql_root_password }}'
+    - name: update mysql root pass for localhost root account from local servers
+      mysql_user:
+         login_user: root
+         login_password: '{{ current_mysql_root_password }}'
+         name: root
+         host: '{{ item }}'
+         password: '{{ updated_mysql_root_password }}'
       with_items:
         - localhost
-    # - name: update mysql root password for all other local root accounts
-    #   mysql_user:
-    #     login_user: root
-    #     login_password: '{{ updated_mysql_root_password }}'
-    #     name: root
-    #     host: '{{ item }}'
-    #     password: '{{ updated_mysql_root_password }}'
-    #   with_items:
-    #     - '{{ inventory_hostname }}'
-    #     - 127.0.0.1
-    #     - '::1'
-    #     - localhost.localdomain
+    - name: update mysql root password for all other local root accounts
+      mysql_user:
+         login_user: root
+         login_password: '{{ updated_mysql_root_password }}'
+         name: root
+         host: '{{ item }}'
+         password: '{{ updated_mysql_root_password }}'
+      with_items:
+         - '{{ inventory_hostname }}'
+         - 127.0.0.1
+         - '::1'
+         - localhost.localdomain
     - name: create asterisk database
       mysql_db:
         login_user: root
@@ -162,4 +167,4 @@
           UserName = asterisk
           Password = {{ updated_mysql_asterisk_password }}
           #Socket = /var/run/mysqld/mysqld.sock
-          Socket = /var/lib/mysql/mysql.sock    
+          Socket = /var/lib/mysql/mysql.sock  
